@@ -122,6 +122,7 @@ def plot_boxplots(df: pd.DataFrame, config: object) -> Tuple[Figure, Axes]:
     sns.boxplot(data=data_df[data_columns], ax=ax, flierprops=flierprops)
 
     x_labels = [col.split('_')[-1] for col in data_columns]
+    ax.set_xticks(range(len(x_labels)))
     ax.set_xticklabels(x_labels)
     ax.set_title(plot_title)
     
