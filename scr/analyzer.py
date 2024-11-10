@@ -54,11 +54,7 @@ def analyze_data(data_path: str, config: object) -> str:
         mask = ~np.isfinite(df[col])
         if mask.any():
             has_invalid_data = True
-            print(f"\n在列 {col} 中发现无效值:")
-            print("问题数据行:")
-            print(df[mask])
-            print(f"无效值总数: {mask.sum()}")
-            print("-" * 50)
+            print(f"在列 {col} 中发现无效值，无效值总数: {mask.sum()}")
     
     if not has_invalid_data:
         print("未发现无效值")
@@ -72,18 +68,6 @@ def analyze_data(data_path: str, config: object) -> str:
     print("\n处理的数据列:", data_columns)
     
     data_df, lsl_values, usl_values = preprocess_data(df)
-    
-    # 再次检查处理后的数据
-    print("\n=== 检查预处理后的数据 ===")
-    for col in data_columns:
-        if col in data_df.columns:
-            mask = ~np.isfinite(data_df[col])
-            if mask.any():
-                print(f"\n在预处理后的列 {col} 中发现无效值:")
-                print("问题数据行:")
-                print(data_df[mask])
-                print(f"无效值总数: {mask.sum()}")
-                print("-" * 50)
     
     print("\n开始绘制分析图...")
     generate_plots(df, data_columns, data_df, lsl_values, usl_values, 

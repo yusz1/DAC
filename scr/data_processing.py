@@ -53,10 +53,21 @@ def clean_data(df: pd.DataFrame, config: object) -> pd.DataFrame:
     spec_data = df[spec_mask].copy()
     actual_data = df[~spec_mask].copy()
     
-    print(f"删除空值前的行数: {len(actual_data)}")
-    # 删除数据列中包含空值的行
-    actual_data = actual_data.dropna(subset=data_columns)
-    print(f"删除空值后的行数: {len(actual_data)}")
+    print(f"处理前的行数: {len(actual_data)}")
+    
+    # 默认删除-10001值
+    if config.DATA_PROCESSING.get('remove_invalid', True):  # 默认为True
+        print("正在删除-10001值...")
+        actual_data[data_columns] = actual_data[data_columns].replace(-10001, np.nan)
+        print(f"删除无效值后的行数: {len(actual_data)}")
+    
+    # 根据配置决定是否删除空值
+    if config.DATA_PROCESSING['remove_null']:
+        print("正在删除空值...")
+        actual_data = actual_data.dropna(subset=data_columns)
+        print(f"删除无效值后的行数: {len(actual_data)}")
+    else:
+        print("保留空值...")
     
     # 如果配置了移除重复值
     if config.DATA_PROCESSING['remove_duplicates']:

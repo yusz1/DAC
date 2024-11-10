@@ -25,7 +25,8 @@ OUTPUT = {
 # 数据预处理配置
 DATA_PROCESSING = {
     'remove_duplicates': True,  # 是否去除重复的SN（保留最新的记录）
-    'remove_invalid_values': True,  # 是否移除无效值（空值和-10001）
+    'remove_null': False,  # 是否删除空值，False 表示保留空值
+    'remove_invalid': True,  # 是否删除-10001值（默认True）
 }
 
 # 数据列配置
