@@ -24,9 +24,13 @@ OUTPUT = {
 
 # 数据预处理配置
 DATA_PROCESSING = {
-    'remove_duplicates': True,  # 是否去除重复的SN（保留最新的记录）
-    'remove_null': False,  # 是否删除空值，False 表示保留空值
-    'remove_invalid': True,  # 是否删除-10001值（默认True）
+    'remove_duplicates': True,
+    'remove_null': False,
+    'remove_invalid': True,
+    'group_analysis': {
+        'enabled': True,           # 是否启用分组分析
+        'group_by': 'Line'         # 分组列名
+    }
 }
 
 # 数据列配置

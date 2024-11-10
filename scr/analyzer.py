@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from .data_processing import clean_data, get_data_columns, preprocess_data
-from .plotting import plot_distributions, plot_boxplots, plot_single_distribution
+from .plotting import plot_distributions, plot_boxplots, plot_single_distribution, plot_group_boxplots
 from .utils import get_output_dir
 
 def setup_matplotlib():
@@ -65,12 +65,48 @@ def analyze_data(data_path: str, config: object) -> str:
     
     output_dir, single_dist_dir = create_output_dirs(data_path)
     data_columns = get_data_columns(df, config)
-    print("\n处理的数据列:", data_columns)
     
+    # 首先生成整体分析图
+    print("\n=== 生成整体分析图 ===")
     data_df, lsl_values, usl_values = preprocess_data(df)
-    
-    print("\n开始绘制分析图...")
-    generate_plots(df, data_columns, data_df, lsl_values, usl_values, 
+    generate_plots(df, data_columns, data_df, lsl_values, usl_values,
                   output_dir, single_dist_dir, config)
+    
+    # 然后检查是否需要生成分组分析图
+    group_config = config.DATA_PROCESSING.get('group_analysis', {})
+    print("\n=== 检查分组分析配置 ===")
+    print(f"group_config: {group_config}")
+    
+    if group_config.get('enabled', False):
+        print("分组分析已启用")
+        group_by = group_config.get('group_by')
+        print(f"分组列: {group_by}")
+        
+        if group_by and group_by in df.columns:
+            print(f"\n=== 开始生成{group_by}分组箱线图 ===")
+            print(f"数据列: {data_columns}")
+            
+            # 创建分组图表目录
+            group_plots_dir = os.path.join(output_dir, f'{group_by}_boxplots')
+            os.makedirs(group_plots_dir, exist_ok=True)
+            print(f"分组图表将保存到: {group_plots_dir}")
+            
+            # 批量处理所有图表
+            plt.ioff()  # 关闭交互模式
+            try:
+                for col in data_columns:
+                    print(f"\n处理列: {col}")
+                    fig, ax = plot_group_boxplots(df[['SN', group_by, col]], group_by, config)
+                    output_path = os.path.join(group_plots_dir, f'{col}_group_boxplot.png')
+                    fig.savefig(output_path)
+                    plt.close(fig)  # 及时关闭图形
+                    print(f"已保存分组箱线图: {output_path}")
+            finally:
+                plt.ion()  # 恢复交互模式
+                
+        else:
+            print(f"警告: 未找到分组列 {group_by}")
+    else:
+        print("分组分析未启用")
     
     return output_dir 
