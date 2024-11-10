@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from .data_processing import clean_data, get_data_columns, preprocess_data
-from .plotting import plot_distributions, plot_boxplots, plot_single_distribution, plot_group_boxplots
+from .plotting import plot_distributions, plot_boxplots, plot_single_distribution, plot_group_boxplots, plot_all_columns_by_group
 from .utils import get_output_dir
 
 def setup_matplotlib():
@@ -82,8 +82,10 @@ def analyze_data(data_path: str, config: object) -> str:
         group_by = group_config.get('group_by')
         plot_types = group_config.get('plot_types', {})
         print(f"分组列: {group_by}")
+        print(f"plot_types配置: {plot_types}")
         
         if group_by and group_by in df.columns:
+            print(f"找到分组列: {group_by}")
             # 分离规格数据和实际数据
             spec_mask = df['SN'].isin(['LSL', 'USL'])
             spec_data = df[spec_mask]
@@ -92,6 +94,7 @@ def analyze_data(data_path: str, config: object) -> str:
             print(f"发现的{group_by}组: {groups}")
             
             plt.ioff()  # 关闭交互模式
+            print("\n=== 进入 try 块 ===")
             try:
                 # 1. 生成分组分布图
                 if plot_types.get('distribution', True):
@@ -142,8 +145,25 @@ def analyze_data(data_path: str, config: object) -> str:
                         plt.close(fig)
                         print(f"已保存分组对比图: {output_path}")
                 
+                # 4. 生成整体分组对比图（独立控制）
+                print(f"\n检查all_columns_compare设置: {plot_types.get('all_columns_compare', True)}")
+                if plot_types.get('all_columns_compare', True):
+                    print(f"\n=== 生成{group_by}整体分组对比图 ===")
+                    group_plots_dir = os.path.join(output_dir, f'{group_by}_comparison')
+                    os.makedirs(group_plots_dir, exist_ok=True)
+                    
+                    print("\n生成整体分组对比图...")
+                    fig, ax = plot_all_columns_by_group(df, group_by, config)
+                    output_path = os.path.join(group_plots_dir, 'all_columns_comparison.png')
+                    fig.savefig(output_path)
+                    plt.close(fig)
+                    print(f"已保存整体分组对比图: {output_path}")
+
+                print("\n=== try 块执行完成 ===")
             finally:
+                print("\n=== 进入 finally 块 ===")
                 plt.ion()  # 恢复交互模式
+                print("\n=== finally 块执行完成 ===")
                 
         else:
             print(f"警告: 未找到分组列 {group_by}")

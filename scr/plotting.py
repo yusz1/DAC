@@ -290,3 +290,103 @@ def plot_group_boxplots(df: pd.DataFrame, group_by: str, config: object) -> Tupl
         print(f"错误类型: {type(e).__name__}")
         print(f"错误信息: {str(e)}")
         raise
+
+def plot_all_columns_by_group(df: pd.DataFrame, group_by: str, config: object) -> Tuple[Figure, Axes]:
+    """在同一图中绘制所有数据列的分组箱线图，每个组包含所有数据列
+    Args:
+        df: 数据框
+        group_by: 分组列名（如'Line'）
+        config: 配置对象
+    Returns:
+        fig: matplotlib图形对象
+        ax: matplotlib轴对象
+    """
+    # 获取数据列和预处理数据
+    data_columns = get_data_columns(df, config)
+    data_df, lsl_values, usl_values = preprocess_data(df)
+    
+    # 分离规格数据和实际数据
+    spec_mask = df['SN'].isin(['LSL', 'USL'])
+    actual_data = df[~spec_mask].copy()
+    
+    try:
+        # 创建图形和轴对象
+        fig, ax = plt.subplots(figsize=(50, 10))
+        
+        # 设置异常值点的样式
+        flierprops = dict(marker='+', markerfacecolor='black', markersize=4)
+        
+        # 获取所有组
+        groups = sorted(actual_data[group_by].unique())
+        
+        # 按组准备数据
+        group_data = []
+        for group in groups:
+            group_df = actual_data[actual_data[group_by] == group][data_columns]
+            group_data.append(group_df)
+        
+        # 设置箱线图的位置
+        positions = np.arange(len(data_columns))
+        width = 0.8 / len(groups)  # 调整箱子宽度
+        
+        # 为每个组绘制箱线图
+        for i, (group, data) in enumerate(zip(groups, group_data)):
+            # 计算当前组的箱线图位置
+            pos = positions + (i - len(groups)/2 + 0.5) * width
+            # 绘制箱线图
+            bp = ax.boxplot([data[col].values for col in data_columns],
+                          positions=pos,
+                          widths=width,
+                          flierprops=flierprops,
+                          patch_artist=True,  # 填充箱子
+                          boxprops=dict(facecolor=f'C{i}', alpha=0.5),  # 设置填充颜色
+                          labels=['' for _ in data_columns],  # 空标签
+                          medianprops=dict(color='black'))  # 中位线颜色
+        
+        # 添加LSL和USL线
+        if lsl_values is not None and config.PLOT['show_lsl']:
+            for i, col in enumerate(data_columns):
+                lsl = float(lsl_values[col])
+                ax.hlines(y=lsl, xmin=i-0.4, xmax=i+0.4, 
+                         colors='r', linestyles='--')
+                ax.text(i, lsl, f'LSL: {lsl:.2f}', 
+                       color='r', verticalalignment='bottom')
+        
+        if usl_values is not None and config.PLOT['show_usl']:
+            for i, col in enumerate(data_columns):
+                usl = float(usl_values[col])
+                ax.hlines(y=usl, xmin=i-0.4, xmax=i+0.4, 
+                         colors='r', linestyles='--')
+                ax.text(i, usl, f'USL: {usl:.2f}', 
+                       color='r', verticalalignment='top')
+        
+        # 设置x轴刻度和标签
+        ax.set_xticks(positions)
+        x_labels = [col.split('_')[-1] for col in data_columns]
+        ax.set_xticklabels(x_labels, rotation=45, ha='right')
+        
+        # 从第一列名称中提取基础标题
+        first_column = data_columns[0]
+        plot_title = '_'.join(first_column.split('_')[:-1])
+        
+        # 添加配置的标题前缀
+        if config.PLOT['title_prefix']:
+            plot_title = f"{config.PLOT['title_prefix']} {plot_title}"
+        
+        # 设置标题和标签
+        ax.set_title(plot_title)
+        ax.set_ylabel('Value')
+        
+        # 添加网格线
+        ax.yaxis.grid(True, linestyle='--', alpha=0.7)
+        
+        # 调整布局
+        plt.tight_layout()
+        
+        return fig, ax
+        
+    except Exception as e:
+        print("\n绘制箱线图时出错:")
+        print(f"错误类型: {type(e).__name__}")
+        print(f"错误信息: {str(e)}")
+        raise

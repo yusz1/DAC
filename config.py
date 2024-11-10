@@ -24,16 +24,17 @@ OUTPUT = {
 
 # 数据预处理配置
 DATA_PROCESSING = {
-    'remove_duplicates': True,
-    'remove_null': False,
+    'remove_duplicates': False,
+    'remove_null': True,
     'remove_invalid': True,
     'group_analysis': {
         'enabled': True,           # 是否启用分组分析
         'group_by': 'Line',        # 分组列名
         'plot_types': {
-            'distribution': False,   # 是否生成分组分布图
-            'boxplot': False,       # 是否生成分组箱线图
-            'group_compare': True  # 是否生成分组对比图（新的单个箱线图）
+            'distribution': True,   # 是否生成分组分布图
+            'boxplot': True,       # 是否生成分组箱线图
+            'group_compare': True,  # 是否生成分组对比图
+            'all_columns_compare': True  # 是否生成所有列的整体分组对比图
         }
     }
 }
