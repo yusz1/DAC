@@ -45,49 +45,27 @@ def get_data_columns(df: pd.DataFrame, config: object) -> List[str]:
 
 def clean_data(df: pd.DataFrame, config: object) -> pd.DataFrame:
     """清理数据：移除无效值和重复值"""
-    print(f"原始数据行数: {len(df)}")
-    
-    # 获取需要处理的数据列名列表
+    # 获取数据列
     data_columns = get_data_columns(df, config)
-    # 组合所需的列名：SN、Time和数据列
-    needed_columns = ['SN', 'Time'] + list(data_columns)
-    # 只保留需要的列
-    cleaned_df = df[needed_columns]
-    
-    # 遍历每个数据列
-    for col in data_columns:
-        # 找出值为-10001的位置
-        mask = cleaned_df[col] == -10001
-        # 将-10001替换为NaN
-        cleaned_df.loc[mask, col] = np.nan
     
     # 分离规格数据和实际数据
-    spec_mask = cleaned_df['SN'].isin(['LSL', 'USL'])  # 创建规格数据的掩码
-    spec_data = cleaned_df[spec_mask].copy()    # 提取规格数据（LSL/USL）
-    actual_data = cleaned_df[~spec_mask].copy() # 提取实际测量数据
+    spec_mask = df['SN'].isin(['LSL', 'USL'])
+    spec_data = df[spec_mask].copy()
+    actual_data = df[~spec_mask].copy()
     
-    print(f"实际数据行数（删除空值前）: {len(actual_data)}")
+    print(f"删除空值前的行数: {len(actual_data)}")
+    # 删除数据列中包含空值的行
     actual_data = actual_data.dropna(subset=data_columns)
-    print(f"实际数据行数（删除空值后）: {len(actual_data)}")
+    print(f"删除空值后的行数: {len(actual_data)}")
     
     # 如果配置了移除重复值
     if config.DATA_PROCESSING['remove_duplicates']:
-        # 如果存在Time列，将其转换为datetime格式
         if 'Time' in actual_data.columns:
             actual_data.loc[:, 'Time'] = pd.to_datetime(actual_data['Time'])
-            
-        # 移除重复的SN，保留最后一次测量的数据
         actual_data = actual_data.drop_duplicates(subset=['SN'], keep='last')
     
     # 将处理后的规格数据和实际数据重新合并
     cleaned_df = pd.concat([spec_data, actual_data], ignore_index=True)
-    
-    print(f"最终数据行数: {len(cleaned_df)}")
-    # 检查是否还有空值
-    null_counts = cleaned_df[data_columns].isnull().sum()
-    if null_counts.any():
-        print("警告：清理后仍存在空值：")
-        print(null_counts[null_counts > 0])
     
     return cleaned_df
 
