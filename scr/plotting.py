@@ -286,7 +286,7 @@ def plot_group_boxplots(df: pd.DataFrame, group_by: str, config: object) -> Tupl
         return fig, ax
         
     except Exception as e:
-        print(f"\n绘制箱线图时出错:")
+        print("\n绘制箱线图时出错:")
         print(f"错误类型: {type(e).__name__}")
         print(f"错误信息: {str(e)}")
         raise

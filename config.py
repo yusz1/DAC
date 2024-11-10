@@ -29,7 +29,12 @@ DATA_PROCESSING = {
     'remove_invalid': True,
     'group_analysis': {
         'enabled': True,           # 是否启用分组分析
-        'group_by': 'Line'         # 分组列名
+        'group_by': 'Line',        # 分组列名
+        'plot_types': {
+            'distribution': False,   # 是否生成分组分布图
+            'boxplot': False,       # 是否生成分组箱线图
+            'group_compare': True  # 是否生成分组对比图（新的单个箱线图）
+        }
     }
 }
 

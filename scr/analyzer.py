@@ -80,27 +80,68 @@ def analyze_data(data_path: str, config: object) -> str:
     if group_config.get('enabled', False):
         print("分组分析已启用")
         group_by = group_config.get('group_by')
+        plot_types = group_config.get('plot_types', {})
         print(f"分组列: {group_by}")
         
         if group_by and group_by in df.columns:
-            print(f"\n=== 开始生成{group_by}分组箱线图 ===")
-            print(f"数据列: {data_columns}")
+            # 分离规格数据和实际数据
+            spec_mask = df['SN'].isin(['LSL', 'USL'])
+            spec_data = df[spec_mask]
+            actual_data = df[~spec_mask]
+            groups = actual_data[group_by].unique()
+            print(f"发现的{group_by}组: {groups}")
             
-            # 创建分组图表目录
-            group_plots_dir = os.path.join(output_dir, f'{group_by}_boxplots')
-            os.makedirs(group_plots_dir, exist_ok=True)
-            print(f"分组图表将保存到: {group_plots_dir}")
-            
-            # 批量处理所有图表
             plt.ioff()  # 关闭交互模式
             try:
-                for col in data_columns:
-                    print(f"\n处理列: {col}")
-                    fig, ax = plot_group_boxplots(df[['SN', group_by, col]], group_by, config)
-                    output_path = os.path.join(group_plots_dir, f'{col}_group_boxplot.png')
-                    fig.savefig(output_path)
-                    plt.close(fig)  # 及时关闭图形
-                    print(f"已保存分组箱线图: {output_path}")
+                # 1. 生成分组分布图
+                if plot_types.get('distribution', True):
+                    print(f"\n=== 生成{group_by}分组分布图 ===")
+                    for group_name in groups:
+                        group_data = pd.concat([
+                            spec_data,
+                            actual_data[actual_data[group_by] == group_name]
+                        ])
+                        group_output_dir = os.path.join(output_dir, f"{group_by}_{group_name}")
+                        group_single_dist_dir = os.path.join(group_output_dir, 'single_distributions')
+                        os.makedirs(group_output_dir, exist_ok=True)
+                        os.makedirs(group_single_dist_dir, exist_ok=True)
+                        
+                        print(f"\n处理 {group_by}: {group_name}")
+                        data_df, lsl_values, usl_values = preprocess_data(group_data)
+                        generate_plots(group_data, data_columns, data_df, lsl_values, usl_values,
+                                    group_output_dir, group_single_dist_dir, config)
+                
+                # 2. 生成分组箱线图
+                if plot_types.get('boxplot', True):
+                    print(f"\n=== 生成{group_by}分组箱线图 ===")
+                    for group_name in groups:
+                        group_data = pd.concat([
+                            spec_data,
+                            actual_data[actual_data[group_by] == group_name]
+                        ])
+                        group_output_dir = os.path.join(output_dir, f"{group_by}_{group_name}")
+                        os.makedirs(group_output_dir, exist_ok=True)
+                        
+                        print(f"\n处理 {group_by}: {group_name}")
+                        data_df, lsl_values, usl_values = preprocess_data(group_data)
+                        fig, ax = plot_boxplots(group_data, config)
+                        plt.savefig(os.path.join(group_output_dir, 'boxplot.png'))
+                        plt.close(fig)
+                
+                # 3. 生成分组对比图
+                if plot_types.get('group_compare', True):
+                    print(f"\n=== 生成{group_by}分组对比图 ===")
+                    group_plots_dir = os.path.join(output_dir, f'{group_by}_comparison')
+                    os.makedirs(group_plots_dir, exist_ok=True)
+                    
+                    for col in data_columns:
+                        print(f"\n处理列: {col}")
+                        fig, ax = plot_group_boxplots(df[['SN', group_by, col]], group_by, config)
+                        output_path = os.path.join(group_plots_dir, f'{col}_group_comparison.png')
+                        fig.savefig(output_path)
+                        plt.close(fig)
+                        print(f"已保存分组对比图: {output_path}")
+                
             finally:
                 plt.ion()  # 恢复交互模式
                 
