@@ -1,0 +1,35 @@
+{
+    "data": {
+        "path": "D:/Projects/data_analysis/data/test_data.xlsx"
+    },
+    "plot": {
+        "show_lsl": true,
+        "show_usl": true,
+        "title_prefix": "SFR Analysis - ",
+        "distribution": {
+            "figsize": [15, 10]
+        },
+        "boxplot": {
+            "figsize": [12, 6]
+        }
+    },
+    "data_processing": {
+        "remove_duplicates": false,
+        "remove_invalid_values": true,
+        "invalid_value": -10001
+    },
+    "data_columns": {
+        "selection_mode": "pattern",
+        "skip_columns": 2,
+        "patterns": [
+            "S_NearSfr_Center",
+            "S_NearSfr_0.5",
+            "S_NearSfr_0.8"
+        ],
+        "exclude_patterns": []
+    },
+    "output": {
+        "subfolder": "output",
+        "dpi": 300
+    }
+} 

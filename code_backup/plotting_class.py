@@ -6,10 +6,10 @@ from matplotlib.figure import Figure
 from matplotlib.axes import Axes
 from typing import List, Tuple, Optional, Dict
 from dataclasses import dataclass
-from .data_processing import (get_data_columns, preprocess_data, 
+from ..src.data_processing import (get_data_columns, preprocess_data, 
                             calculate_cpk, calculate_out_of_spec,
                             calculate_out_of_spec_column)
-from .utils import format_number
+from ..src.utils import format_number
 
 @dataclass
 class PlotStyle:

@@ -2,9 +2,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 import config
-from .data_processing import clean_data, get_data_columns, preprocess_data
-from .plotting import plot_distributions, plot_boxplots, plot_single_distribution
-from .utils import get_output_dir, check_path
+from scr.data_processing import clean_data, get_data_columns, preprocess_data
+from scr.plotting import plot_distributions, plot_boxplots, plot_single_distribution
+from scr.utils import get_output_dir, check_path
 
 plt.rcParams['font.sans-serif'] = ['Microsoft YaHei']
 plt.rcParams['axes.unicode_minus'] = False
