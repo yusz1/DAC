@@ -334,7 +334,7 @@ def plot_all_columns_by_group(df: pd.DataFrame, group_by: str, config: object) -
             # 计算当前组的箱线图位置
             pos = positions + (i - len(groups)/2 + 0.5) * width
             # 绘制箱线图
-            bp = ax.boxplot([data[col].values for col in data_columns],
+            ax.boxplot([data[col].values for col in data_columns],
                           positions=pos,
                           widths=width,
                           flierprops=flierprops,
