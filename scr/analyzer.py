@@ -3,10 +3,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from .data_processing import clean_data, get_data_columns, preprocess_data
-from .distribution_plots import plot_distributions, plot_single_distribution
+from .distribution_plots import plot_distributions, plot_single_distribution, export_statistics_to_excel
 from .box_plots import plot_boxplots, plot_group_boxplots, plot_all_columns_by_group
 from .utils import get_output_dir
-from .correlation_plots import plot_correlations
+from .correlation_plots import plot_correlations    
 
 def setup_matplotlib():
     """设置matplotlib的基本配置"""
@@ -32,8 +32,11 @@ def create_output_dirs(data_path):
     os.makedirs(single_dist_dir, exist_ok=True)
     return output_dir, single_dist_dir
 
-def generate_plots(df, data_columns, data_df, lsl_values, usl_values, output_dir, single_dist_dir, config):
+def generate_plots(df, data_columns, data_df, lsl_values, usl_values, output_dir, single_dist_dir, config, is_group_data=False):
     """生成所有基本图表"""
+    # 导出统计数据到Excel
+    export_statistics_to_excel(df, config, output_dir, is_group_data)
+    
     # 生成并保存总体分布图
     if config.PLOT.get('enable_distribution', True):
         print("\n生成分布图...")
@@ -149,7 +152,7 @@ def analyze_data(data_path: str, config: object) -> str:
                         # 预处理数据并生成图表
                         data_df, lsl_values, usl_values = preprocess_data(group_data)
                         generate_plots(group_data, data_columns, data_df, lsl_values, usl_values,
-                                    group_output_dir, group_single_dist_dir, config)
+                                    group_output_dir, group_single_dist_dir, config, is_group_data=True)
                 
                 # 2. 生成分组箱线图
                 if config.PLOT.get('enable_group_boxplot', True):
@@ -198,7 +201,7 @@ def analyze_data(data_path: str, config: object) -> str:
                     output_path = os.path.join(group_plots_dir, 'all_columns_comparison.png')
                     fig.savefig(output_path)
                     plt.close(fig)
-                    print(f"已保存整��分组对比图: {output_path}")
+                    print(f"已保存整体分组对比图: {output_path}")
 
             finally:
                 plt.ion()

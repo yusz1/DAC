@@ -10,16 +10,16 @@ PLOT = {
     'boxplot': {
         'figsize': (20, 10)
     },
-    'enable_distribution': False,    # 控制是否生成分布图
+    'enable_distribution': True,    # 控制是否生成分布图
     'enable_boxplot': False,        # 控制是否生成箱线图
     'enable_group_boxplot': False,  # 控制是否生成分组箱线图
     'enable_all_columns_compare': False,  # 控制是否生成整体分组对比图
-    'enable_correlation': True,  # 控制是否生成相关性分析图
+    'enable_correlation': False,  # 控制是否生成相关性分析图
 }
 
 # 数据配置
 DATA = {
-    'path': r'D:\Projects\data_analysis\data\test_data_correlation.xlsx'
+    'path': r'D:\Projects\data_analysis\data\test_data.xlsx'
 }
 
 # 输出配置
@@ -34,7 +34,7 @@ DATA_PROCESSING = {
     'remove_null': True,
     'remove_invalid': True,
     'group_analysis': {
-        'enabled': False,           # 是否启用分组分析
+        'enabled': True,           # 是否启用分组分析
         'group_by': 'Line',        # 分组列名
         # 'plot_types': {
         #     'distribution': True,   # 是否生成分组分布图

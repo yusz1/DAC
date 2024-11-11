@@ -5,7 +5,11 @@ from matplotlib.axes import Axes
 from typing import List, Optional
 from scr.plot_base import PlotStyle, PlotHelper
 from scr.data_processing import (get_data_columns, preprocess_data,
-                               calculate_out_of_spec)
+                               calculate_out_of_spec, calculate_cpk,
+                               calculate_out_of_spec_column)
+from scr.utils import format_number
+import numpy as np
+import os
 
 class DistributionPlot:
     def __init__(self, style: PlotStyle = PlotStyle()):
@@ -18,6 +22,33 @@ class DistributionPlot:
         return PlotHelper.setup_distribution_plot(
             ax, data, col, lsl, usl, config, self.style
         )
+
+    @staticmethod
+    def add_statistics(ax: Axes, data: pd.Series, lsl: Optional[float], 
+                      usl: Optional[float], style: PlotStyle) -> str:
+        # 计算基本统计量
+        mean = np.mean(data)
+        std = np.std(data)
+        count = len(data)
+        
+        # 计算CPK和超限数量
+        cpk = calculate_cpk(data, usl, lsl)
+        out_of_spec = calculate_out_of_spec_column(data, lsl, usl)
+        
+        # 构建统计信息文本
+        stats = [
+            f'N={count}',
+            f'Mean={format_number(mean)}',
+            f'Std={format_number(std)}'
+        ]
+        
+        if cpk is not None:
+            stats.append(f'Cpk={format_number(cpk)}')
+        
+        if out_of_spec > 0:
+            stats.append(f'NG={out_of_spec}')
+        
+        return '\n'.join(stats)
 
 def plot_distributions(df: pd.DataFrame, config: object) -> Figure:
     """绘制正态分布图"""
@@ -64,3 +95,78 @@ def plot_single_distribution(data_df: pd.DataFrame, col: str,
     
     plt.tight_layout()
     return fig
+
+def export_statistics_to_excel(df: pd.DataFrame, config: object, output_dir: str, is_group_data: bool = False) -> None:
+    """导出统计数据到Excel"""
+    # 获取数据列和分组配置
+    data_columns = get_data_columns(df, config)
+    data_df, lsl_values, usl_values = preprocess_data(df)
+    group_config = config.DATA_PROCESSING.get('group_analysis', {})
+    group_by = group_config.get('group_by') if group_config.get('enabled', False) else None
+    
+    # 准备统计数据
+    stats_data = []
+    
+    # 检查是否为分组数据
+    if is_group_data and group_by:
+        # 获取当前组的数据（排除LSL/USL行）
+        actual_data = df[~df['SN'].isin(['LSL', 'USL'])]
+        # 获取组名（应该只有一个唯一值）
+        group_name = actual_data[group_by].unique()[0]
+        print(f"当前组名: {group_name}")
+        print(data_columns)
+        for col in data_columns:
+            data = data_df[col].astype(float)
+            lsl = float(lsl_values[col]) if lsl_values is not None else None
+            usl = float(usl_values[col]) if usl_values is not None else None
+            
+            # 计算统计量
+            count = len(data)
+            mean = np.mean(data)
+            std = np.std(data)
+            cpk = calculate_cpk(data, usl, lsl)
+            out_of_spec = calculate_out_of_spec_column(data, lsl, usl)
+            rate = f'{(out_of_spec / count * 100):.2f}%' if count > 0 else '0%'
+            
+            stats_data.append({
+                group_by: group_name,  # 添加分组列
+                'Items': col,
+                'Test': count,
+                'NG': out_of_spec,
+                'Rate': rate,
+                'LSL': lsl if lsl is not None else '',
+                'USL': usl if usl is not None else '',
+                'Mean': f'{mean:.3f}',
+                'Std': f'{std:.3f}',
+                'CPK': f'{cpk:.3f}' if cpk is not None else ''
+            })
+    else:
+        # 非分组情况的处理
+        for col in data_columns:
+            data = data_df[col].astype(float)
+            lsl = float(lsl_values[col]) if lsl_values is not None else None
+            usl = float(usl_values[col]) if usl_values is not None else None
+            
+            count = len(data)
+            mean = np.mean(data)
+            std = np.std(data)
+            cpk = calculate_cpk(data, usl, lsl)
+            out_of_spec = calculate_out_of_spec_column(data, lsl, usl)
+            rate = f'{(out_of_spec / count * 100):.2f}%' if count > 0 else '0%'
+            
+            stats_data.append({
+                'Items': col,
+                'Test': count,
+                'NG': out_of_spec,
+                'Rate': rate,
+                'LSL': lsl if lsl is not None else '',
+                'USL': usl if usl is not None else '',
+                'Mean': f'{mean:.3f}',
+                'Std': f'{std:.3f}',
+                'CPK': f'{cpk:.3f}' if cpk is not None else ''
+            })
+    
+    # 创建DataFrame并导出到Excel
+    stats_df = pd.DataFrame(stats_data)
+    excel_path = os.path.join(output_dir, 'statistics_summary.xlsx')
+    stats_df.to_excel(excel_path, index=False)
