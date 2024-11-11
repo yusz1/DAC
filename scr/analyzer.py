@@ -3,7 +3,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from .data_processing import clean_data, get_data_columns, preprocess_data
-from .plotting import plot_distributions, plot_boxplots, plot_single_distribution, plot_group_boxplots, plot_all_columns_by_group
+from .distribution_plots import plot_distributions, plot_single_distribution
+from .box_plots import plot_boxplots, plot_group_boxplots, plot_all_columns_by_group
 from .utils import get_output_dir
 
 def setup_matplotlib():
