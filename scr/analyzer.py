@@ -6,6 +6,7 @@ from .data_processing import clean_data, get_data_columns, preprocess_data
 from .distribution_plots import plot_distributions, plot_single_distribution
 from .box_plots import plot_boxplots, plot_group_boxplots, plot_all_columns_by_group
 from .utils import get_output_dir
+from .correlation_plots import plot_correlations
 
 def setup_matplotlib():
     """设置matplotlib的基本配置"""
@@ -52,6 +53,11 @@ def generate_plots(df, data_columns, data_df, lsl_values, usl_values, output_dir
         plot_boxplots(df, config)
         plt.savefig(os.path.join(output_dir, 'boxplot.png'))
         plt.close()
+    
+    # 生成相关性分析图
+    if config.PLOT.get('enable_correlation', True):
+        print("\n生成相关性分析图...")
+        plot_correlations(df, config)
 
 def analyze_data(data_path: str, config: object) -> str:
     """执行完整的数据分析流程
@@ -192,7 +198,7 @@ def analyze_data(data_path: str, config: object) -> str:
                     output_path = os.path.join(group_plots_dir, 'all_columns_comparison.png')
                     fig.savefig(output_path)
                     plt.close(fig)
-                    print(f"已保存整体分组对比图: {output_path}")
+                    print(f"已保存整��分组对比图: {output_path}")
 
             finally:
                 plt.ion()
