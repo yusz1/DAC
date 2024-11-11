@@ -82,66 +82,67 @@ def analyze_data(data_path: str, config: object) -> str:
     # 设置matplotlib基本配置
     setup_matplotlib()
     
-    # 读取Excel数据文件
-    print("读取数据文件...")
-    df = pd.read_excel(data_path)
-    print(f"数据加载成功！从: {data_path}")
-    
-    # 数据检查阶段
-    print("\n=== 数据检查阶段 ===")
-    print("数据形状:", df.shape)
-    print("\n检查数据中的无效值...")
-    # 获取所有数值类型的列
-    numeric_columns = df.select_dtypes(include=[np.number]).columns
-    print("数值列:", numeric_columns.tolist())
-    
-    # 检查每列是否存在无效值
-    has_invalid_data = False
-    for col in numeric_columns:
-        mask = ~np.isfinite(df[col])  # 检查非有限值（NaN或inf）
-        if mask.any():
-            has_invalid_data = True
-            print(f"在列 {col} 中发现无效值，无效值总数: {mask.sum()}")
-    
-    if not has_invalid_data:
-        print("未发现无效值")
-    
-    # 数据处理阶段
-    print("\n=== 开始数据处理 ===")
-    print("正在清理数据...")
-    df = clean_data(df, config)
-    
-    # 创建输出目录结构
-    output_dir, single_dist_dir = create_output_dirs(data_path)
-    # 获取需要分析的数据列
-    data_columns = get_data_columns(df, config)
-    
-    # 首先生成整体分析图
-    print("\n=== 生成整体分析图 ===")
-    data_df, lsl_values, usl_values = preprocess_data(df)
-    generate_plots(df, data_columns, data_df, lsl_values, usl_values,
-                  output_dir, single_dist_dir, config)
-    
-    # 然后检查是否需要生成分组分析图
-    group_config = config.DATA_PROCESSING.get('group_analysis', {})
-    print("\n=== 检查分组分析配置 ===")
-    print(f"group_config: {group_config}")
-    
-    # 检查是否启用分组分析功能
-    if group_config.get('enabled', False):
-        print("分组分析已启用")
-        group_by = group_config.get('group_by')
+    # 关闭交互模式
+    plt.ioff()
+    try:
+        # 读取Excel数据文件
+        print("读取数据文件...")
+        df = pd.read_excel(data_path)
+        print(f"数据加载成功！从: {data_path}")
         
-        if group_by and group_by in df.columns:
-            print(f"找到分组列: {group_by}")
-            spec_mask = df['SN'].isin(['LSL', 'USL'])
-            spec_data = df[spec_mask]
-            actual_data = df[~spec_mask]
-            groups = actual_data[group_by].unique()
-            print(f"发现的{group_by}组: {groups}")
+        # 数据检查阶段
+        print("\n=== 数据检查阶段 ===")
+        print("数据形状:", df.shape)
+        print("\n检查数据中的无效值...")
+        # 获取所有数值类型的列
+        numeric_columns = df.select_dtypes(include=[np.number]).columns
+        print("数值列:", numeric_columns.tolist())
+        
+        # 检查每列是否存在无效值
+        has_invalid_data = False
+        for col in numeric_columns:
+            mask = ~np.isfinite(df[col])  # 检查非有限值（NaN或inf）
+            if mask.any():
+                has_invalid_data = True
+                print(f"在列 {col} 中发现无效值，无效值总数: {mask.sum()}")
+        
+        if not has_invalid_data:
+            print("未发现无效值")
+        
+        # 数据处理阶段
+        print("\n=== 开始数据处理 ===")
+        print("正在清理数据...")
+        df = clean_data(df, config)
+        
+        # 创建输出目录结构
+        output_dir, single_dist_dir = create_output_dirs(data_path)
+        # 获取需要分析的数据列
+        data_columns = get_data_columns(df, config)
+        
+        # 首先生成整体分析图
+        print("\n=== 生成整体分析图 ===")
+        data_df, lsl_values, usl_values = preprocess_data(df)
+        generate_plots(df, data_columns, data_df, lsl_values, usl_values,
+                      output_dir, single_dist_dir, config)
+        
+        # 然后检查是否需要生成分组分析图
+        group_config = config.DATA_PROCESSING.get('group_analysis', {})
+        print("\n=== 检查分组分析配置 ===")
+        print(f"group_config: {group_config}")
+        
+        # 检查是否启用分组分析功能
+        if group_config.get('enabled', False):
+            print("分组分析已启用")
+            group_by = group_config.get('group_by')
             
-            plt.ioff()
-            try:
+            if group_by and group_by in df.columns:
+                print(f"找到分组列: {group_by}")
+                spec_mask = df['SN'].isin(['LSL', 'USL'])
+                spec_data = df[spec_mask]
+                actual_data = df[~spec_mask]
+                groups = actual_data[group_by].unique()
+                print(f"发现的{group_by}组: {groups}")
+                
                 # 1. 生成分组分布图
                 if config.PLOT.get('enable_distribution', True):
                     print(f"\n=== 生成{group_by}分组分布图 ===")
@@ -211,13 +212,19 @@ def analyze_data(data_path: str, config: object) -> str:
                     fig.savefig(output_path)
                     plt.close(fig)
                     print(f"已保存整体分组对比图: {output_path}")
-
-            finally:
-                plt.ion()
-                
+            else:
+                print(f"警告: 未找到分组列 {group_by}")
         else:
-            print(f"警告: 未找到分组列 {group_by}")
-    else:
+            print("分组分析未启用")
+            
+        return output_dir
+            
+    except Exception as e:
+        print(f"分析过程中出现错误: {str(e)}")
+        raise
+    finally:
+        # 恢复交互模式
+        plt.ion()
         print("分组分析未启用")
     
     return output_dir 
