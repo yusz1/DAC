@@ -113,8 +113,6 @@ def export_statistics_to_excel(df: pd.DataFrame, config: object, output_dir: str
         actual_data = df[~df['SN'].isin(['LSL', 'USL'])]
         # 获取组名（应该只有一个唯一值）
         group_name = actual_data[group_by].unique()[0]
-        print(f"当前组名: {group_name}")
-        print(data_columns)
         for col in data_columns:
             data = data_df[col].astype(float)
             lsl = float(lsl_values[col]) if lsl_values is not None else None

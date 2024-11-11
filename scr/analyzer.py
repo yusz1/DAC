@@ -23,13 +23,22 @@ def create_output_dirs(data_path):
         output_dir: 主输出目录
         single_dist_dir: 单个分布图目录
     """
-    # 获取输出目录路径
-    output_dir = get_output_dir(data_path)
+    # 获取当前时间戳
+    timestamp = pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')
+    
+    # 获取基础输出目录路径
+    base_output_dir = get_output_dir(data_path)
+    
+    # 添加时间戳到目录名
+    output_dir = f"{base_output_dir}_{timestamp}"
+    
     # 创建单个分布图的子目录
     single_dist_dir = os.path.join(output_dir, 'single_distributions')
+    
     # 确保目录存在
     os.makedirs(output_dir, exist_ok=True)
     os.makedirs(single_dist_dir, exist_ok=True)
+    
     return output_dir, single_dist_dir
 
 def generate_plots(df, data_columns, data_df, lsl_values, usl_values, output_dir, single_dist_dir, config, is_group_data=False):
