@@ -3,7 +3,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from .data_processing import clean_data, get_data_columns, preprocess_data
-from .plotting import plot_distributions, plot_boxplots, plot_single_distribution, plot_group_boxplots, plot_all_columns_by_group
+from .distribution_plots import plot_distributions, plot_single_distribution
+from .box_plots import plot_boxplots, plot_group_boxplots, plot_all_columns_by_group
 from .utils import get_output_dir
 
 def setup_matplotlib():
@@ -31,32 +32,26 @@ def create_output_dirs(data_path):
     return output_dir, single_dist_dir
 
 def generate_plots(df, data_columns, data_df, lsl_values, usl_values, output_dir, single_dist_dir, config):
-    """生成所有基本图表
-    Args:
-        df: 原始数据框
-        data_columns: 需要分析的数据列
-        data_df: 预处理后的数据框
-        lsl_values: 下限值
-        usl_values: 上限值
-        output_dir: 输出目录
-        single_dist_dir: 单个分布图目录
-        config: 配置对象
-    """
+    """生成所有基本图表"""
     # 生成并保存总体分布图
-    plot_distributions(df, config)
-    plt.savefig(os.path.join(output_dir, 'distribution_plots.png'))
-    plt.close()
-    
-    # 为每个数据列生成单独的分布图
-    for col in data_columns:
-        fig = plot_single_distribution(data_df, col, lsl_values, usl_values, config)
-        plt.savefig(os.path.join(single_dist_dir, f'{col}.png'))
-        plt.close(fig)
+    if config.PLOT.get('enable_distribution', True):
+        print("\n生成分布图...")
+        plot_distributions(df, config)
+        plt.savefig(os.path.join(output_dir, 'distribution_plots.png'))
+        plt.close()
+        
+        # 为每个数据列生成单独的分布图
+        for col in data_columns:
+            fig = plot_single_distribution(data_df, col, lsl_values, usl_values, config)
+            plt.savefig(os.path.join(single_dist_dir, f'{col}.png'))
+            plt.close(fig)
     
     # 生成并保存箱线图
-    plot_boxplots(df, config)
-    plt.savefig(os.path.join(output_dir, 'boxplot.png'))
-    plt.close()
+    if config.PLOT.get('enable_boxplot', True):
+        print("\n生成箱线图...")
+        plot_boxplots(df, config)
+        plt.savefig(os.path.join(output_dir, 'boxplot.png'))
+        plt.close()
 
 def analyze_data(data_path: str, config: object) -> str:
     """执行完整的数据分析流程
@@ -117,27 +112,20 @@ def analyze_data(data_path: str, config: object) -> str:
     # 检查是否启用分组分析功能
     if group_config.get('enabled', False):
         print("分组分析已启用")
-        # 从配置中获取分组列名和图表类型配置
-        group_by = group_config.get('group_by')  # 获取用于分组的列名
-        plot_types = group_config.get('plot_types', {})  # 获取需要生成的图表类型
-        print(f"分组列: {group_by}")
-        print(f"plot_types配置: {plot_types}")
+        group_by = group_config.get('group_by')
         
-        # 检查分组列是否存在于数据框中
         if group_by and group_by in df.columns:
             print(f"找到分组列: {group_by}")
-            # 将数据分为规格数据（LSL/USL）和实际测量数据
-            spec_mask = df['SN'].isin(['LSL', 'USL'])  # 创建规格数据的掩码
-            spec_data = df[spec_mask]    # 提取规格数据
-            actual_data = df[~spec_mask]  # 提取实际测量数据
-            groups = actual_data[group_by].unique()  # 获取所有唯一的分组值
+            spec_mask = df['SN'].isin(['LSL', 'USL'])
+            spec_data = df[spec_mask]
+            actual_data = df[~spec_mask]
+            groups = actual_data[group_by].unique()
             print(f"发现的{group_by}组: {groups}")
             
-            plt.ioff()  # 关闭matplotlib的交互模式，提高性能
-            print("\n=== 进入 try 块 ===")
+            plt.ioff()
             try:
                 # 1. 生成分组分布图
-                if plot_types.get('distribution', True):
+                if config.PLOT.get('enable_distribution', True):
                     print(f"\n=== 生成{group_by}分组分布图 ===")
                     for group_name in groups:
                         # 合并当前组的数据和规格数据
@@ -158,7 +146,7 @@ def analyze_data(data_path: str, config: object) -> str:
                                     group_output_dir, group_single_dist_dir, config)
                 
                 # 2. 生成分组箱线图
-                if plot_types.get('boxplot', True):
+                if config.PLOT.get('enable_group_boxplot', True):
                     print(f"\n=== 生成{group_by}分组箱线图 ===")
                     for group_name in groups:
                         # 合并当前组的数据和规格数据
@@ -178,7 +166,7 @@ def analyze_data(data_path: str, config: object) -> str:
                         plt.close(fig)
                 
                 # 3. 生成分组对比图（每列单独的分组对比）
-                if plot_types.get('group_compare', True):
+                if config.PLOT.get('enable_group_boxplot', True):
                     print(f"\n=== 生成{group_by}分组对比图 ===")
                     # 创建分组对比图的专用目录
                     group_plots_dir = os.path.join(output_dir, f'{group_by}_comparison')
@@ -193,9 +181,8 @@ def analyze_data(data_path: str, config: object) -> str:
                         plt.close(fig)
                         print(f"已保存分组对比图: {output_path}")
                 
-                # 4. 生成整体分组对比图（所有列在同一图中比较）
-                print(f"\n检查all_columns_compare设置: {plot_types.get('all_columns_compare', True)}")
-                if plot_types.get('all_columns_compare', True):
+                # 4. 生成整体分组对比图
+                if config.PLOT.get('enable_all_columns_compare', True):
                     print(f"\n=== 生成{group_by}整体分组对比图 ===")
                     group_plots_dir = os.path.join(output_dir, f'{group_by}_comparison')
                     os.makedirs(group_plots_dir, exist_ok=True)
@@ -207,11 +194,8 @@ def analyze_data(data_path: str, config: object) -> str:
                     plt.close(fig)
                     print(f"已保存整体分组对比图: {output_path}")
 
-                print("\n=== try 块执行完成 ===")
             finally:
-                print("\n=== 进入 finally 块 ===")
-                plt.ion()  # 恢复matplotlib的交互模式
-                print("\n=== finally 块执行完成 ===")
+                plt.ion()
                 
         else:
             print(f"警告: 未找到分组列 {group_by}")
