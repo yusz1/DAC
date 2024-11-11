@@ -1,10 +1,8 @@
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
-from typing import List, Tuple, Optional
+from typing import List, Optional
 from scr.plot_base import PlotStyle, PlotHelper
 from scr.data_processing import (get_data_columns, preprocess_data,
                                calculate_out_of_spec)

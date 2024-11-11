@@ -9,7 +9,11 @@ PLOT = {
     },
     'boxplot': {
         'figsize': (20, 10)
-    }
+    },
+    'enable_distribution': True,    # 控制是否生成分布图
+    'enable_boxplot': True,        # 控制是否生成箱线图
+    'enable_group_boxplot': True,  # 控制是否生成分组箱线图
+    'enable_all_columns_compare': True,  # 控制是否生成整体分组对比图
 }
 
 # 数据配置
@@ -30,12 +34,12 @@ DATA_PROCESSING = {
     'group_analysis': {
         'enabled': True,           # 是否启用分组分析
         'group_by': 'Line',        # 分组列名
-        'plot_types': {
-            'distribution': True,   # 是否生成分组分布图
-            'boxplot': True,       # 是否生成分组箱线图
-            'group_compare': True,  # 是否生成分组对比图
-            'all_columns_compare': True  # 是否生成所有列的整体分组对比图
-        }
+        # 'plot_types': {
+        #     'distribution': True,   # 是否生成分组分布图
+        #     'boxplot': True,       # 是否生成分组箱线图
+        #     'group_compare': True,  # 是否生成分组对比图
+        #     'all_columns_compare': True  # 是否生成所有列的整体分组对比图
+        # }
     }
 }
 
