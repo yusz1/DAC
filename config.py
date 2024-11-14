@@ -1,5 +1,8 @@
+from scr.default_config import *  # noqa: F403
+# from scr.default_config import PLOT, DATA, OUTPUT, DATA_PROCESSING, DATA_COLUMNS
+
 # 基础配置
-PLOT = {
+PLOT = {  # noqa: F811
     'show_lsl': True,  # 是否显示LSL线
     'show_usl': False,  # 是否显示USL线
     'title_prefix': '',  # 标题前缀，如果不为空则会添加到标题前
