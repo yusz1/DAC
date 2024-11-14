@@ -52,32 +52,71 @@ class DistributionPlot:
 
 def plot_distributions(df: pd.DataFrame, config: object) -> Figure:
     """绘制正态分布图"""
-    plotter = DistributionPlot()
     data_columns = get_data_columns(df, config)
     data_df, lsl_values, usl_values = preprocess_data(df)
-    
+
+    # 计算总体良率信息
     total_count, total_out_of_spec_count = calculate_out_of_spec(
         data_df, data_columns, lsl_values, usl_values
     )
+    total_yield = (total_out_of_spec_count / total_count) * 100 if total_out_of_spec_count > 0 else 0
     
-    fig = plt.figure(figsize=config.PLOT['distribution']['figsize'])
+    # 计算需要的行数和列数
+    n_cols = 4  # 保持每行4列
+    n_rows = (len(data_columns) + n_cols - 1) // n_cols  # 向上取整计算行数
     
+    # 创建足够大的图表
+    fig = plt.figure(figsize=(
+        config.PLOT['distribution']['figsize'][0],
+        config.PLOT['distribution']['figsize'][1] * (n_rows / 5)  # 根据行数调整高度
+    ))
+    
+    # 绘制每个数据列的分布图
     for i, col in enumerate(data_columns, 1):
-        ax = fig.add_subplot(5, 4, i)
+        ax = fig.add_subplot(n_rows, n_cols, i)
         data = data_df[col].astype(float)
         lsl = float(lsl_values[col]) if lsl_values is not None else None
         usl = float(usl_values[col]) if usl_values is not None else None
         
-        plotter.plot_common(ax, data, col, lsl, usl, config)
-    
-    fig.suptitle(f'Test：{total_count}  NG：{total_out_of_spec_count}', 
+        PlotHelper.setup_distribution_plot(ax, data, col, lsl, usl, config, PlotStyle())
+     
+     # 添加总标题
+    fig.suptitle(f'Test: {total_count}  NG: {total_out_of_spec_count}   Rate: {total_yield:.2f}%',
                  y=0.995,
                  fontsize='large',
                  bbox=dict(facecolor='white', alpha=0.8, edgecolor='none'))
     
+    # 调整子图之间的间距
     plt.tight_layout()
-    plt.subplots_adjust(top=0.95)
+    plt.subplots_adjust(top=0.95)  # 为suptitle留出空间
     return fig
+
+    # plotter = DistributionPlot()
+    # data_columns = get_data_columns(df, config)
+    # data_df, lsl_values, usl_values = preprocess_data(df)
+    
+    # total_count, total_out_of_spec_count = calculate_out_of_spec(
+    #     data_df, data_columns, lsl_values, usl_values
+    # )
+    
+    # fig = plt.figure(figsize=config.PLOT['distribution']['figsize'])
+
+    # for i, col in enumerate(data_columns, 1):
+    #     ax = fig.add_subplot(5, 4, i)
+    #     data = data_df[col].astype(float)
+    #     lsl = float(lsl_values[col]) if lsl_values is not None else None
+    #     usl = float(usl_values[col]) if usl_values is not None else None
+        
+    #     plotter.plot_common(ax, data, col, lsl, usl, config)
+    
+    # fig.suptitle(f'Test：{total_count}  NG：{total_out_of_spec_count}', 
+    #              y=0.995,
+    #              fontsize='large',
+    #              bbox=dict(facecolor='white', alpha=0.8, edgecolor='none'))
+    
+    # plt.tight_layout()
+    # plt.subplots_adjust(top=0.95)
+    # return fig
 
 def plot_single_distribution(data_df: pd.DataFrame, col: str,
                            lsl_values: Optional[pd.Series],
