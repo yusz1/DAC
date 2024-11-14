@@ -48,15 +48,11 @@ DATA_PROCESSING = {
 # 数据列配置
 DATA_COLUMNS = {
     'patterns': [  # 数据列的匹配模式列表
-        'S_NearSfr',
-        'MTF',
-        'FOV',
-        'Item',
         # 可以添加更多的模式
     ],
     'exclude_patterns': [  # 需要排除的列模式（如果有的话）
           # 例如: 'Test_', 'Temp_' 等
     ],
-    'skip_columns': 0,  # 跳过前5列，其余列作为数据列
+    'skip_columns': 5,  # 跳过前5列，其余列作为数据列
     'selection_mode': 'pattern'  # 'pattern' 或 'skip'，用于选择数据列的方式
 } 

@@ -38,9 +38,10 @@ class MainWindow(QMainWindow):
         # 添加各个配置区域
         layout.addWidget(self.create_file_section())
         layout.addWidget(self.create_plot_section())
+        layout.addWidget(self.create_plot_settings_section())
         layout.addWidget(self.create_data_processing_section())
         layout.addWidget(self.create_group_analysis_section())
-        
+
         # 添加运行按钮和进度条
         layout.addWidget(self.create_run_section())
         
@@ -83,6 +84,30 @@ class MainWindow(QMainWindow):
         group.setLayout(layout)
         return group
     
+    def create_plot_settings_section(self):
+        """创建图表设置区域"""
+        group = QGroupBox("图表设置")
+        layout = QVBoxLayout()
+        
+        # 显示限制线设置
+        limit_layout = QHBoxLayout()
+        self.show_lsl_check = QCheckBox("显示LSL")
+        self.show_usl_check = QCheckBox("显示USL")
+        limit_layout.addWidget(self.show_lsl_check)
+        limit_layout.addWidget(self.show_usl_check)
+        
+        # 标题前缀设置
+        prefix_layout = QHBoxLayout()
+        prefix_layout.addWidget(QLabel("标题前缀:"))
+        self.title_prefix_input = QLineEdit()
+        self.title_prefix_input.setPlaceholderText("输入标题前缀（可选）")
+        prefix_layout.addWidget(self.title_prefix_input)
+        
+        layout.addLayout(limit_layout)
+        layout.addLayout(prefix_layout)
+        group.setLayout(layout)
+        return group
+
     def create_data_processing_section(self):
         """创建数据处理配置区域"""
         group = QGroupBox("数据处理")

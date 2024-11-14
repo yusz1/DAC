@@ -6,6 +6,9 @@ def update_config(config, ui):
     
     # 更新图表类型配置
     config.PLOT.update({
+        'show_lsl': ui.show_lsl_check.isChecked(),
+        'show_usl': ui.show_usl_check.isChecked(),
+        'title_prefix': ui.title_prefix_input.text(),
         'enable_distribution': ui.dist_check.isChecked(),
         'enable_boxplot': ui.box_check.isChecked(),
         'enable_group_boxplot': ui.group_box_check.isChecked(),
