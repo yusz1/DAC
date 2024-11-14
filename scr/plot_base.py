@@ -93,7 +93,7 @@ class PlotHelper:
         """设置分布图的通用元素"""
         # 绘制直方图和密度曲线
         sns.histplot(data=data, stat='density', ax=ax)
-        sns.kdeplot(data=data, ax=ax, color='red')
+        sns.kdeplot(data=data, ax=ax, color='red', ls='--')
         
         # 获取y轴限制
         ymin, ymax = ax.get_ylim()
@@ -114,8 +114,13 @@ class PlotHelper:
         if config.PLOT['show_usl'] and usl is not None:
             ax.axvline(x=usl, **style.usl_style)
         
-        # 设置标题
-        ax.set_title(col.split('_')[-1])
+        # 设置标题（加入前缀）
+        plot_title = col
+        if config.PLOT['title_prefix']:
+            plot_title = f"{config.PLOT['title_prefix']} {plot_title}"
+        ax.set_title(plot_title)
+        # 设置x轴标签（只使用最后一部分）
+        ax.set_xlabel(col.split('_')[-1])
         
         # 移除y轴标签
         ax.set_ylabel('')
